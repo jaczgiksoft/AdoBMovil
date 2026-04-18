@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { IonPage, IonContent, IonIcon } from '@ionic/react';
-import { alertsService } from '../services';
-import { getAlertsMock } from '../services/alerts.mock';
+import { getAlertsApi } from '../services/alerts.api';
 import { AlertItem } from '../types';
 import { notificationsOutline, warningOutline, informationCircleOutline } from 'ionicons/icons';
-import { usePatient } from '../../../core/context/PatientContext';
+import { useAuthStore } from '../../../store/useAuthStore';
 
 const getSeverityIcon = (severity: string) => {
   if (severity === 'urgent') return warningOutline;
@@ -19,33 +18,35 @@ const getSeverityColor = (severity: string) => {
 };
 
 export const AlertsPage: React.FC = () => {
-  const { currentPatient } = usePatient();
+  const { token } = useAuthStore();
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isActive = true;
-    setAlerts([]);
+    setLoading(true);
 
-    const loadAlerts = (idToLoad: string) => {
-      getAlertsMock(idToLoad)
-        .then((data) => {
-          if (isActive) setAlerts(data);
-        })
-        .catch((err) => {
-          console.error('Error al cargar notificaciones:', err);
-          if (isActive && idToLoad !== 'pat-sj-1029') {
-            console.log('Haciendo fallback a alertas demostrativas...');
-            loadAlerts('pat-sj-1029');
-          }
-        });
+    const loadAlerts = async () => {
+      try {
+        const data = await getAlertsApi(token || undefined);
+        if (isActive) {
+          setAlerts(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error al cargar notificaciones:', err);
+        if (isActive) {
+          setLoading(false);
+        }
+      }
     };
 
-    loadAlerts(currentPatient?.id || 'pat-sj-1029');
+    loadAlerts();
 
     return () => {
       isActive = false;
     };
-  }, [currentPatient?.id]);
+  }, [token]);
 
   return (
     <IonPage>
@@ -70,7 +71,13 @@ export const AlertsPage: React.FC = () => {
               </div>
             </div>
           ))}
-          {alerts.length === 0 && (
+          {alerts.length === 0 && !loading && (
+            <div className="h-40 flex flex-col items-center justify-center opacity-60">
+              <IonIcon icon={notificationsOutline} className="text-4xl mb-2" />
+              <p className="text-[var(--text-secondary)] font-medium text-sm tracking-wide">No notifications found.</p>
+            </div>
+          )}
+          {loading && (
             <div className="h-40 flex items-center justify-center">
               <p className="text-[var(--text-secondary)] font-medium text-sm animate-pulse tracking-wide">Loading notifications...</p>
             </div>

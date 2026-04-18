@@ -1,5 +1,10 @@
-import { getElasticsMock } from './elastics.mock';
+import { getMyElasticsApi } from './elastics.api';
+import { useAuthStore } from '../../../store/useAuthStore';
 
 export const elasticsService = {
-  getElastics: getElasticsMock,
+  getElastics: async () => {
+    const token = useAuthStore.getState().token;
+    if (!token) return [];
+    return getMyElasticsApi(token);
+  },
 };

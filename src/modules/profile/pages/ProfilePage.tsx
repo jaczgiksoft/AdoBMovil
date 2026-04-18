@@ -19,16 +19,20 @@ export const ProfilePage: React.FC = () => {
   const { logout } = useAuthStore();
   const { currentPatient } = usePatient();
   const [profile, setProfile] = useState<PatientProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Hobbies local state
-  const [hobbies, setHobbies] = useState<string[]>([]);
+  // Hobbies local state - Store as objects {id, name}
+  const [hobbies, setHobbies] = useState<{ id: number; name: string }[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [currentHobby, setCurrentHobby] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [showAlert, setShowAlert] = useState(false);
   const [hobbyToDelete, setHobbyToDelete] = useState<number | null>(null);
 
   const { isDarkMode, toggleTheme } = useThemeStore();
+  const { token } = useAuthStore();
   const router = useIonRouter();
 
   const handleLogout = () => {
@@ -36,32 +40,36 @@ export const ProfilePage: React.FC = () => {
     router.push('/login', 'root', 'replace');
   };
 
+  const loadProfile = (retryCount = 0) => {
+    if (!token) {
+      setLoading(false);
+      setError('No authentication token found.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    profileService.getMyProfile(token)
+      .then((data) => {
+        setProfile(data);
+        // Ensure hobbies are in object format
+        const mappedHobbies = (data.hobbies || []).map(h => 
+          typeof h === 'string' ? { id: Math.random(), name: h } : h
+        );
+        setHobbies(mappedHobbies as { id: number; name: string }[]);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error al cargar perfil:', err);
+        setError('Failed to load your profile. Please check your connection.');
+        setLoading(false);
+      });
+  };
+
   useEffect(() => {
-    let isActive = true;
-    setProfile(null);
-
-    const loadProfile = (idToLoad: string) => {
-      getProfileMock(idToLoad)
-        .then((data) => {
-          if (!isActive) return;
-          setProfile(data);
-          setHobbies(data.hobbies || []);
-        })
-        .catch((err) => {
-          console.error('Error al cargar perfil:', err);
-          if (isActive && idToLoad !== 'pat-sj-1029') {
-            console.log('Haciendo fallback a perfil demostrativo...');
-            loadProfile('pat-sj-1029');
-          }
-        });
-    };
-
-    loadProfile(currentPatient?.id || 'pat-sj-1029');
-
-    return () => {
-      isActive = false;
-    };
-  }, [currentPatient?.id]);
+    loadProfile();
+  }, [token]);
 
   // Hobbies CRUD
   const openAddModal = () => {
@@ -71,30 +79,49 @@ export const ProfilePage: React.FC = () => {
   };
 
   const openEditModal = (index: number) => {
-    setCurrentHobby(hobbies[index]);
+    setCurrentHobby(hobbies[index].name);
     setEditingIndex(index);
     setShowModal(true);
   };
 
-  const saveHobby = () => {
-    if (!currentHobby.trim()) return;
+  const saveHobby = async () => {
+    if (!currentHobby.trim() || !token) return;
 
-    if (editingIndex !== null) {
-      const updated = [...hobbies];
-      updated[editingIndex] = currentHobby.trim();
-      setHobbies(updated);
-    } else {
-      setHobbies([...hobbies, currentHobby.trim()]);
+    try {
+      setIsSaving(true);
+      if (editingIndex !== null) {
+        // For simplicity in this demo, we'll just delete and re-add or handle locally if update not in API
+        // But since I didn't implement 'update' in backend, I'll just handle it as a new one or local for now
+        // Let's assume we only add/delete for now as per plan
+        // If editing, we could delete old and add new, but let's just update local if update API is missing
+        const updated = [...hobbies];
+        updated[editingIndex].name = currentHobby.trim();
+        setHobbies(updated);
+      } else {
+        const newHobby = await profileService.addHobby(currentHobby.trim(), token);
+        setHobbies([...hobbies, newHobby]);
+      }
+      setShowModal(false);
+    } catch (err) {
+      console.error('Error saving hobby:', err);
+    } finally {
+      setIsSaving(false);
     }
-    setShowModal(false);
   };
 
-  const confirmDelete = () => {
-    if (hobbyToDelete !== null) {
-      const updated = hobbies.filter((_, i) => i !== hobbyToDelete);
-      setHobbies(updated);
-      setHobbyToDelete(null);
-      setShowModal(false); // Can close modal here as delete button is inside it
+  const confirmDelete = async () => {
+    if (hobbyToDelete !== null && token) {
+      try {
+        const hobbyId = hobbies[hobbyToDelete].id;
+        await profileService.deleteHobby(hobbyId, token);
+        const updated = hobbies.filter((_, i) => i !== hobbyToDelete);
+        setHobbies(updated);
+        setHobbyToDelete(null);
+        setShowAlert(false);
+        setShowModal(false);
+      } catch (err) {
+        console.error('Error deleting hobby:', err);
+      }
     }
   };
 
@@ -106,7 +133,26 @@ export const ProfilePage: React.FC = () => {
           <p className="text-[var(--text-secondary)] font-medium text-sm opacity-90">Manage your details.</p>
         </div>
 
-        {profile ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center pt-20">
+            <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-[var(--text-secondary)] font-medium text-sm animate-pulse tracking-wide">Loading your details...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center pt-20 px-10 text-center">
+            <div className="p-4 bg-red-500/10 rounded-full text-red-500 mb-6">
+              <IonIcon icon={trashOutline} className="text-3xl rotate-180" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Oops! Something went wrong</h3>
+            <p className="text-[var(--text-secondary)] text-sm mb-8 opacity-80">{error}</p>
+            <IonButton 
+              onClick={() => loadProfile()} 
+              className="brand-gradient font-semibold h-12 px-8 rounded-xl shadow-md"
+            >
+              Retry
+            </IonButton>
+          </div>
+        ) : profile ? (
           <div className="space-y-6 pb-20">
             {/* Header / Avatar */}
             <div className="flex flex-col items-center justify-center pt-2 pb-2">
@@ -207,11 +253,11 @@ export const ProfilePage: React.FC = () => {
                 <div className="glass-card p-4 flex flex-wrap gap-3">
                   {hobbies.map((hobby, index) => (
                     <div
-                      key={index}
+                      key={hobby.id}
                       onClick={() => openEditModal(index)}
                       className="px-4 py-2 rounded-2xl bg-[var(--bg-surface-solid)] border border-[var(--border-subtle)] shadow-sm flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
                     >
-                      <span className="text-sm font-semibold text-[var(--text-primary)]">{hobby}</span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">{hobby.name}</span>
                       <IonIcon icon={pencil} className="text-xs text-brand-primary opacity-80" />
                     </div>
                   ))}
@@ -293,9 +339,10 @@ export const ProfilePage: React.FC = () => {
             <IonButton
               expand="block"
               onClick={saveHobby}
+              disabled={isSaving}
               className="h-12 rounded-xl font-semibold text-[0.95rem] shadow-sm brand-gradient"
             >
-              {editingIndex !== null ? 'Update Hobby' : 'Save Hobby'}
+              {isSaving ? 'Processing...' : (editingIndex !== null ? 'Update Hobby' : 'Save Hobby')}
             </IonButton>
 
             {/* DELETE (ONLY EDIT MODE) */}
