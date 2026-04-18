@@ -3,43 +3,56 @@ import { IonPage, IonContent, IonIcon, useIonRouter } from '@ionic/react';
 import { homeService } from '../services';
 import { getHomeSummaryMock } from '../services/home.mock';
 import { PatientHomeSummary } from '../types';
-import { calendar, alertCircle, sparkles, chevronForwardOutline, timeOutline, chevronDownOutline } from 'ionicons/icons';
+import { calendar, alertCircle, sparkles, chevronForwardOutline, timeOutline, chevronDownOutline, alert } from 'ionicons/icons';
 import { useAuthStore } from '../../../store/useAuthStore';
 import PatientSelectorModal from '../../../components/common/PatientSelectorModal';
 import { usePatient } from '@/core/context/PatientContext';
 
+
 export const HomePage: React.FC = () => {
   const [summary, setSummary] = useState<PatientHomeSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showSelector, setShowSelector] = useState(false);
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const { currentPatient } = usePatient();
   const router = useIonRouter();
 
   useEffect(() => {
     let isActive = true;
-    setSummary(null);
+    setIsLoading(true);
 
     const loadSummary = (idToLoad: string) => {
-      // 🔥 Forzamos usar el mock para siempre mostrar los datos demostrativos
-      getHomeSummaryMock(idToLoad)
+      // Usamos el service que detecta si debe usar Mock o API
+      homeService.getHomeSummary(idToLoad, token || undefined)
         .then((data) => {
-          if (isActive) setSummary(data);
+          console.log(JSON.stringify(data));
+          if (isActive) {
+            setSummary(data);
+          }
         })
         .catch((err) => {
           console.error('Error al cargar datos del paciente:', err);
-          if (isActive && idToLoad !== 'pat-sj-1029') {
-            console.log('Haciendo fallback a paciente demostrativo...');
-            loadSummary('pat-sj-1029');
-          }
+        })
+        .finally(() => {
+          if (isActive) setIsLoading(false);
         });
     };
 
-    loadSummary(currentPatient?.id || 'pat-sj-1029');
+
+    // Intentamos cargar usando el paciente seleccionado o el ID del usuario (si es paciente)
+    const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+
+    if (idToLoad) {
+      loadSummary(idToLoad);
+    } else {
+      // Si no hay paciente ni ID de usuario válido, dejamos de cargar
+      setIsLoading(false);
+    }
 
     return () => {
       isActive = false;
     };
-  }, [currentPatient?.id]);
+  }, [currentPatient?.id, token]);
 
   /* 
   if (user?.role === 'tutor' && !currentPatient) {
@@ -63,7 +76,11 @@ export const HomePage: React.FC = () => {
         {/* Background glow orb */}
         <div className="absolute top-[-5%] left-[-10%] w-[40vh] h-[40vh] bg-brand-primary mix-blend-plus-lighter filter blur-[80px] opacity-30 pointer-events-none"></div>
 
-        {summary ? (
+        {isLoading ? (
+          <div className="h-full flex flex-col items-center justify-center pt-20">
+            <p className="text-[var(--text-secondary)] font-medium text-sm animate-pulse tracking-wide">Gathering your dashboard...</p>
+          </div>
+        ) : summary ? (
           <div className="relative z-10 pt-8 pb-8 space-y-6">
 
             {/* Header Hero Area */}
@@ -167,7 +184,7 @@ export const HomePage: React.FC = () => {
           </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center pt-20">
-            <p className="text-[var(--text-secondary)] font-medium text-sm animate-pulse tracking-wide">Gathering your dashboard...</p>
+            <p className="text-[var(--text-secondary)] font-medium text-sm tracking-wide">No patient data found.</p>
           </div>
         )}
 

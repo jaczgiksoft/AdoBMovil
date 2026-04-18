@@ -10,5 +10,5 @@ export interface PatientProfile {
   age?: number;
   gender?: 'male' | 'female' | 'other';
   address?: string;
-  hobbies?: string[];
+  hobbies?: (string | { id: number; name: string })[];
 }
