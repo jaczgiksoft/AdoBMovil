@@ -1,7 +1,7 @@
 import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
-import { Appointment } from '../types';
+import { AppointmentItem } from '../types';
 
-export const getAppointmentsApi = async (patientId: string, token?: string): Promise<Appointment[]> => {
+export const getAppointmentsApi = async (patientId: string, token?: string): Promise<AppointmentItem[]> => {
   if (!patientId) {
     throw new Error('Patient ID is required');
   }

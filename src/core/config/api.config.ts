@@ -8,7 +8,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/ap
 /**
  * Returns the default headers for all API requests.
  */
-export const getBaseHeaders = (token?: string) => {
+export const getBaseHeaders = (token?: string | null) => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     // 💡 Workaround for ngrok free-tier "browser warning" interceptor
