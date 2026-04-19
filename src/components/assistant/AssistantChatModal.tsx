@@ -12,6 +12,7 @@ import {
 } from '@ionic/react';
 import { closeOutline, send } from 'ionicons/icons';
 import { useAuthStore } from '../../store/useAuthStore';
+import { API_URL, getBaseHeaders } from '../../core/config/api.config';
 
 interface Message {
   id: string;
@@ -74,12 +75,9 @@ export const AssistantChatModal: React.FC<AssistantChatModalProps> = ({ isOpen, 
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/ai-agent/chat`, {
+      const response = await fetch(`${API_URL}/ai-agent/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
+        headers: getBaseHeaders(token),
         body: JSON.stringify({
           patient_id: patientId ? parseInt(patientId, 10) : undefined,
           message: userMsg.text

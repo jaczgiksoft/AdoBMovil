@@ -1,6 +1,5 @@
+import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
 import { PatientElastic } from '../types';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const getMyElasticsApi = async (token: string): Promise<PatientElastic[]> => {
   if (!token) {
@@ -9,10 +8,7 @@ export const getMyElasticsApi = async (token: string): Promise<PatientElastic[]>
 
   const response = await fetch(`${API_URL}/auth/me-patient/elastics`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+    headers: getBaseHeaders(token),
   });
 
   if (!response.ok) {

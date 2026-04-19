@@ -1,6 +1,5 @@
+import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
 import { AuthResponse } from '../types';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const loginApi = async (username?: string, password?: string): Promise<AuthResponse> => {
   if (!username) {
@@ -12,9 +11,7 @@ export const loginApi = async (username?: string, password?: string): Promise<Au
 
   const response = await fetch(`${API_URL}/auth/login-patient`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: getBaseHeaders(),
     body: JSON.stringify({ username, password }),
   });
 

@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { IonToast, IonSpinner } from '@ionic/react';
 import { BarcodeScanner, BarcodeFormat } from '@capacitor-mlkit/barcode-scanning';
+import { API_URL, getBaseHeaders } from '../../core/config/api.config';
 import { AssistantChatModal } from './AssistantChatModal';
 import { useAuthStore } from '../../store/useAuthStore';
-
-const API_URL = import.meta.env.VITE_API_URL as string;
 
 // ─── QR Check-In Service (pure, stateless) ────────────────────────────────────
 async function postQrCheckIn(
@@ -14,7 +13,7 @@ async function postQrCheckIn(
 ): Promise<{ success: boolean; message: string }> {
   const response = await fetch(`${API_URL}/attendance/qr-checkin`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getBaseHeaders(),
     body: JSON.stringify({ token, phoneNumber }),
   });
   const data = await response.json();

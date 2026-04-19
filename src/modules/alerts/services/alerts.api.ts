@@ -1,14 +1,10 @@
+import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
 import { AlertItem } from '../types';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const getAlertsApi = async (token?: string): Promise<AlertItem[]> => {
   const response = await fetch(`${API_URL}/patient-alerts/my-alerts`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
+    headers: getBaseHeaders(token),
   });
 
   if (!response.ok) {

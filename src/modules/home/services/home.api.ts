@@ -1,7 +1,5 @@
+import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
 import { PatientHomeSummary } from '../types';
-
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const getHomeSummaryApi = async (patientId: string, token?: string): Promise<PatientHomeSummary> => {
   if (!patientId) {
@@ -10,10 +8,7 @@ export const getHomeSummaryApi = async (patientId: string, token?: string): Prom
 
   const response = await fetch(`${API_URL}/patients/${patientId}/home-summary`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-    },
+    headers: getBaseHeaders(token),
   });
 
   if (!response.ok) {

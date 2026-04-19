@@ -1,18 +1,14 @@
-import { AppointmentItem } from '../types';
+import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
+import { Appointment } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-export const getAppointmentsApi = async (patientId: string, token?: string): Promise<any[]> => {
+export const getAppointmentsApi = async (patientId: string, token?: string): Promise<Appointment[]> => {
   if (!patientId) {
     throw new Error('Patient ID is required');
   }
 
   const response = await fetch(`${API_URL}/appointments/patient-mobile/${patientId}`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    },
+    headers: getBaseHeaders(token),
   });
 
   if (!response.ok) {
