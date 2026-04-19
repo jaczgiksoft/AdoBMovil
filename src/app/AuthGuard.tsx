@@ -28,10 +28,5 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
-  // 🔹 Primer acceso obligatorio
-  if (user?.isFirstAccess && location.pathname !== '/first-access') {
-    return <Redirect to="/first-access" />;
-  }
-
   return <>{children}</>;
 };

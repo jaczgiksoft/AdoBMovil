@@ -60,10 +60,6 @@ export const AppRouter: React.FC = () => {
             render={() => {
               if (!isAuthenticated) return <LoginPage />;
 
-              if (user?.isFirstAccess) {
-                return <Redirect to="/first-access" />;
-              }
-
               return (
                 <Redirect
                   to={user?.role === 'tutor' ? '/app/overview' : '/app/home'}
@@ -107,10 +103,6 @@ export const AppRouter: React.FC = () => {
             path="/"
             render={() => {
               if (!isAuthenticated) return <Redirect to="/login" />;
-
-              if (user?.isFirstAccess) {
-                return <Redirect to="/first-access" />;
-              }
 
               return (
                 <Redirect
