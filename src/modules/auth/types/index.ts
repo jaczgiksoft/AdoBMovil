@@ -5,6 +5,7 @@ export interface PatientUser {
   name: string;
   email: string;
   role: DemoUserRole;
+  phoneNumber?: string;
   avatarUrl?: string;
   isFirstAccess?: boolean;
 }

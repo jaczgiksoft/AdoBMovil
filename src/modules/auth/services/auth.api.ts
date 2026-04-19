@@ -29,15 +29,26 @@ export const loginApi = async (username?: string, password?: string): Promise<Au
   // You might want to adjust based on exact DB returned info.
   const decodedToken = JSON.parse(atob(data.token.split('.')[1]));
   
+  // Si el backend regresa el objeto user, lo usamos y mapeamos campos
+  const user = data.user ? {
+    id: String(data.user.id),
+    name: `${data.user.first_name} ${data.user.last_name}`,
+    email: data.user.email,
+    phoneNumber: data.user.phone_number,
+    role: 'patient' as const,
+    avatarUrl: data.user.photo_url || '/assets/avatars/default.png',
+    isFirstAccess: data.user.first_login ?? true
+  } : {
+    id: decodedToken.id,
+    name: decodedToken.username,
+    email: decodedToken.username,
+    role: 'patient' as const,
+    avatarUrl: '/assets/avatars/default.png',
+    isFirstAccess: true
+  };
+
   return {
-    user: {
-      id: decodedToken.id,
-      name: decodedToken.username,
-      email: decodedToken.username,
-      role: 'patient',
-      avatarUrl: '/assets/avatars/default.png',
-      isFirstAccess: false // Assume false unless backend returns it explicitly
-    },
+    user,
     token: data.token,
     activePatientId: String(decodedToken.id),
   };
