@@ -17,7 +17,7 @@ const getStatusBadge = (status: string) => {
 };
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const BASE_URL = API_URL.replace('/api', '');
+const BASE_URL = import.meta.env.VITE_API || 'http://localhost:3000';
 
 // 🗺️ Mapper: Backend -> UI
 const mapBackendToUI = (data: PatientElastic[]): ElasticInstruction[] => {

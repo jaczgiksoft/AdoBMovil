@@ -109,7 +109,7 @@ export const AssistantChatModal: React.FC<AssistantChatModalProps> = ({ isOpen, 
       setIsTyping(false);
     }
   };
-
+  
   const getMascotSrc = () => '/assets/mascot.png';
 
   const avatarFallback = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
