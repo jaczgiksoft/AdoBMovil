@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IonPage, IonContent, IonIcon, useIonRouter } from '@ionic/react';
+import { IonPage, IonContent, IonIcon, useIonRouter, useIonViewWillEnter } from '@ionic/react';
 import { homeService } from '../services';
 import { getHomeSummaryMock } from '../services/home.mock';
 import { PatientHomeSummary } from '../types';
@@ -17,28 +17,30 @@ export const HomePage: React.FC = () => {
   const { currentPatient } = usePatient();
   const router = useIonRouter();
 
-  useEffect(() => {
-    let isActive = true;
+  const loadSummary = (idToLoad: string) => {
     setIsLoading(true);
+    // Usamos el service que detecta si debe usar Mock o API
+    homeService.getHomeSummary(idToLoad, token || undefined)
+      .then((data) => {
+        console.log(JSON.stringify(data));
+        setSummary(data);
+      })
+      .catch((err) => {
+        console.error('Error al cargar datos del paciente:', err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
 
-    const loadSummary = (idToLoad: string) => {
-      // Usamos el service que detecta si debe usar Mock o API
-      homeService.getHomeSummary(idToLoad, token || undefined)
-        .then((data) => {
-          console.log(JSON.stringify(data));
-          if (isActive) {
-            setSummary(data);
-          }
-        })
-        .catch((err) => {
-          console.error('Error al cargar datos del paciente:', err);
-        })
-        .finally(() => {
-          if (isActive) setIsLoading(false);
-        });
-    };
+  useIonViewWillEnter(() => {
+    const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+    if (idToLoad) {
+      loadSummary(idToLoad);
+    }
+  });
 
-
+  useEffect(() => {
     // Intentamos cargar usando el paciente seleccionado o el ID del usuario (si es paciente)
     const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
 
@@ -48,10 +50,6 @@ export const HomePage: React.FC = () => {
       // Si no hay paciente ni ID de usuario válido, dejamos de cargar
       setIsLoading(false);
     }
-
-    return () => {
-      isActive = false;
-    };
   }, [currentPatient?.id, token]);
 
   /* 

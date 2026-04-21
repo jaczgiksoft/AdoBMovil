@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IonPage, IonContent, IonIcon, IonSpinner, IonText } from '@ionic/react';
+import { IonPage, IonContent, IonIcon, IonSpinner, IonText, useIonViewWillEnter } from '@ionic/react';
 import { appointmentsService } from '../services';
 import { AppointmentItem } from '../types';
 import { calendarOutline, timeOutline, checkmarkCircleOutline, alertCircleOutline } from 'ionicons/icons';
@@ -13,41 +13,43 @@ export const AppointmentsPage: React.FC = () => {
   const { currentPatient } = usePatient();
   const { user, token } = useAuthStore();
 
-  useEffect(() => {
-    let isActive = true;
+  const loadAppointments = (idToLoad: string) => {
     setIsLoading(true);
     setError(null);
 
-    const loadAppointments = (idToLoad: string) => {
-      // @ts-ignore - appointmentsService might not have token in its type definition yet
-      appointmentsService.getAppointments(idToLoad, token || undefined)
-        .then((data: any[]) => {
-          if (!isActive) return;
+    // @ts-ignore - appointmentsService might not have token in its type definition yet
+    appointmentsService.getAppointments(idToLoad, token || undefined)
+      .then((data: any[]) => {
+        // Mapping backend data to current AppointmentItem structure
+        const mappedData: AppointmentItem[] = data.map((apt: any) => ({
+          id: String(apt.id),
+          // Combining date and start_time if needed, but assuming apt.date might be sufficient or needs joining
+          date: apt.date && apt.start_time ? `${apt.date}T${apt.start_time}` : apt.date,
+          dentistName: apt.employee
+            ? `${apt.employee.first_name} ${apt.employee.last_name}`
+            : 'Especialista',
+          reason: apt.reason || apt.treatment_name || 'Consulta Dental',
+          status: apt.status || 'scheduled'
+        }));
 
-          // Mapping backend data to current AppointmentItem structure
-          const mappedData: AppointmentItem[] = data.map((apt: any) => ({
-            id: String(apt.id),
-            // Combining date and start_time if needed, but assuming apt.date might be sufficient or needs joining
-            date: apt.date && apt.start_time ? `${apt.date}T${apt.start_time}` : apt.date,
-            dentistName: apt.employee
-              ? `${apt.employee.first_name} ${apt.employee.last_name}`
-              : 'Especialista',
-            reason: apt.reason || apt.treatment_name || 'Consulta Dental',
-            status: apt.status || 'scheduled'
-          }));
+        setAppointments(mappedData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error al cargar la lista de visitas:', err);
+        setError('No pudimos cargar tus citas. Por favor, intenta de nuevo.');
+        setIsLoading(false);
+      });
+  };
 
-          setAppointments(mappedData);
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          console.error('Error al cargar la lista de visitas:', err);
-          if (isActive) {
-            setError('No pudimos cargar tus citas. Por favor, intenta de nuevo.');
-            setIsLoading(false);
-          }
-        });
-    };
+  useIonViewWillEnter(() => {
+    const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+    if (idToLoad) {
+      loadAppointments(idToLoad);
+    }
+  });
 
+  useEffect(() => {
     // Intentamos cargar usando el paciente seleccionado o el ID del usuario (si es paciente)
     const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
 
@@ -56,10 +58,6 @@ export const AppointmentsPage: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-
-    return () => {
-      isActive = false;
-    };
   }, [currentPatient?.id, token, user?.id, user?.role]);
 
   return (
