@@ -19,3 +19,25 @@ export const getAppointmentsApi = async (patientId: string, token?: string): Pro
   const result = await response.json();
   return result.data || [];
 };
+
+export const updateAppointmentStatusApi = async (
+  appointmentId: string,
+  status: 'confirmada' | 'cancelada',
+  token?: string
+): Promise<any> => {
+  const response = await fetch(`${API_URL}/appointments/${appointmentId}/status`, {
+    method: 'PATCH',
+    headers: {
+      ...getBaseHeaders(token),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Error updating appointment status: ${response.statusText}`);
+  }
+
+  return await response.json();
+};

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IonPage, IonContent, IonIcon } from '@ionic/react';
+import { IonPage, IonContent, IonIcon, useIonViewWillEnter } from '@ionic/react';
 import { treatmentService } from '../services';
 import { TreatmentSummary } from '../types';
 import { shieldCheckmarkOutline, checkmarkCircleOutline, timeOutline, ellipseOutline } from 'ionicons/icons';
@@ -21,23 +21,26 @@ export const TreatmentPage: React.FC = () => {
   const { currentPatient } = usePatient();
   const [treatment, setTreatment] = useState<TreatmentSummary | null>(null);
 
-  useEffect(() => {
-    if (!currentPatient) return;
-
-    let isActive = true;
-
+  const loadTreatment = (patientId: string) => {
     setTreatment(null);
-
     treatmentService
-      .getTreatmentSummary(currentPatient.id)
+      .getTreatmentSummary(patientId)
       .then((data) => {
-        if (isActive) setTreatment(data);
+        setTreatment(data);
       })
       .catch(console.error);
+  };
 
-    return () => {
-      isActive = false;
-    };
+  useIonViewWillEnter(() => {
+    if (currentPatient) {
+      loadTreatment(currentPatient.id);
+    }
+  });
+
+  useEffect(() => {
+    if (currentPatient) {
+      loadTreatment(currentPatient.id);
+    }
   }, [currentPatient?.id]);
 
   return (

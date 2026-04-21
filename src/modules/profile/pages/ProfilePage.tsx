@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   IonPage, IonContent, IonButton, IonIcon, useIonRouter, IonToggle,
   IonFab, IonFabButton, IonModal, IonHeader, IonToolbar, IonTitle,
-  IonButtons, IonItem, IonInput, IonAlert
+  IonButtons, IonItem, IonInput, IonAlert, useIonViewWillEnter
 } from '@ionic/react';
 import { profileService } from '../services';
 import { getProfileMock } from '../services/profile.mock';
@@ -66,6 +66,10 @@ export const ProfilePage: React.FC = () => {
         setLoading(false);
       });
   };
+
+  useIonViewWillEnter(() => {
+    loadProfile();
+  });
 
   useEffect(() => {
     loadProfile();

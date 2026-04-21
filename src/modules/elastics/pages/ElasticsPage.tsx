@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IonPage, IonContent, IonIcon, IonModal, IonSpinner } from '@ionic/react';
+import { IonPage, IonContent, IonIcon, IonModal, IonSpinner, useIonViewWillEnter } from '@ionic/react';
 import { elasticsService } from '../services';
 import { ElasticInstruction, PatientElastic } from '../types';
 import { timeOutline, calendarOutline, checkmarkCircleOutline, ellipsisHorizontalCircleOutline, playCircleOutline, alertCircleOutline } from 'ionicons/icons';
@@ -78,23 +78,23 @@ export const ElasticsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadElastics = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await elasticsService.getElastics();
-        setInstructions(mapBackendToUI(data as PatientElastic[]));
-      } catch (err: any) {
-        console.error('Error loading elastics:', err);
-        setError('No se pudieron cargar las instrucciones. Por favor, intenta de nuevo más tarde.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadElastics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await elasticsService.getElastics();
+      setInstructions(mapBackendToUI(data as PatientElastic[]));
+    } catch (err: any) {
+      console.error('Error loading elastics:', err);
+      setError('No se pudieron cargar las instrucciones. Por favor, intenta de nuevo más tarde.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useIonViewWillEnter(() => {
     loadElastics();
-  }, []);
+  });
 
   const handleImageClick = async (imagePath: string) => {
     setSelectedImage(imagePath);

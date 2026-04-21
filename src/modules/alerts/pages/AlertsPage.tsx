@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IonPage, IonContent, IonIcon } from '@ionic/react';
+import { IonPage, IonContent, IonIcon, useIonViewWillEnter } from '@ionic/react';
 import { getAlertsApi } from '../services/alerts.api';
 import { AlertItem } from '../types';
 import { notificationsOutline, warningOutline, informationCircleOutline } from 'ionicons/icons';
@@ -22,30 +22,24 @@ export const AlertsPage: React.FC = () => {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let isActive = true;
-    setLoading(true);
+  const loadAlerts = async () => {
+    try {
+      setLoading(true);
+      const data = await getAlertsApi(token || undefined);
+      setAlerts(data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error al cargar notificaciones:', err);
+      setLoading(false);
+    }
+  };
 
-    const loadAlerts = async () => {
-      try {
-        const data = await getAlertsApi(token || undefined);
-        if (isActive) {
-          setAlerts(data);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Error al cargar notificaciones:', err);
-        if (isActive) {
-          setLoading(false);
-        }
-      }
-    };
-
+  useIonViewWillEnter(() => {
     loadAlerts();
+  });
 
-    return () => {
-      isActive = false;
-    };
+  useEffect(() => {
+    loadAlerts();
   }, [token]);
 
   return (
