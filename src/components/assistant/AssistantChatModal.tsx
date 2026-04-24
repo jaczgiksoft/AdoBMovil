@@ -13,6 +13,7 @@ import {
 import { closeOutline, send } from 'ionicons/icons';
 import { useAuthStore } from '../../store/useAuthStore';
 import { API_URL, getBaseHeaders } from '../../core/config/api.config';
+import { usePatient } from '../../core/context/PatientContext';
 
 interface Message {
   id: string;
@@ -28,6 +29,7 @@ interface AssistantChatModalProps {
 
 export const AssistantChatModal: React.FC<AssistantChatModalProps> = ({ isOpen, onClose, patientId }) => {
   const { token } = useAuthStore();
+  const { currentPatient } = usePatient();
   const [messages, setMessages] = useState<Message[]>([
     { id: 'start', text: '¡Hola! Soy tu asistente de IA. ¿En qué te puedo ayudar hoy?', sender: 'assistant' }
   ]);
@@ -79,7 +81,7 @@ export const AssistantChatModal: React.FC<AssistantChatModalProps> = ({ isOpen, 
         method: 'POST',
         headers: getBaseHeaders(token),
         body: JSON.stringify({
-          patient_id: patientId ? parseInt(patientId, 10) : undefined,
+          patient_id: currentPatient?.id ? parseInt(currentPatient.id, 10) : (patientId ? parseInt(patientId, 10) : undefined),
           message: userMsg.text
         })
       });

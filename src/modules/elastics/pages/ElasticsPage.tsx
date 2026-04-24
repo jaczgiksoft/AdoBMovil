@@ -35,24 +35,24 @@ const mapBackendToUI = (data: PatientElastic[]): ElasticInstruction[] => {
     }
 
     const elastics: { type: 'Heavy' | 'Medium' | 'Light'; color: string }[] = [];
-    
+
     // Simple mapping for demonstration, real app might need more logic
     if (inst.upper_elastic) {
-      const type = inst.upper_elastic.toLowerCase().includes('heavy') ? 'Heavy' : 
-                   inst.upper_elastic.toLowerCase().includes('light') ? 'Light' : 'Medium';
+      const type = inst.upper_elastic.toLowerCase().includes('heavy') ? 'Heavy' :
+        inst.upper_elastic.toLowerCase().includes('light') ? 'Light' : 'Medium';
       const color = type === 'Heavy' ? '#ef4444' : type === 'Light' ? '#22c55e' : '#a855f7';
       elastics.push({ type, color });
     }
 
     if (inst.lower_elastic) {
-      const type = inst.lower_elastic.toLowerCase().includes('heavy') ? 'Heavy' : 
-                   inst.lower_elastic.toLowerCase().includes('light') ? 'Light' : 'Medium';
+      const type = inst.lower_elastic.toLowerCase().includes('heavy') ? 'Heavy' :
+        inst.lower_elastic.toLowerCase().includes('light') ? 'Light' : 'Medium';
       const color = type === 'Heavy' ? '#ef4444' : type === 'Light' ? '#22c55e' : '#a855f7';
       elastics.push({ type, color });
     }
 
     // Use the image from backend if it exists, otherwise use placeholder
-    const imagePath = inst.preview_image_url 
+    const imagePath = inst.preview_image_url
       ? (inst.preview_image_url.startsWith('http') ? inst.preview_image_url : `${BASE_URL}/${inst.preview_image_url}`)
       : '/example/instrucciones.png';
 
@@ -98,6 +98,7 @@ export const ElasticsPage: React.FC = () => {
   });
 
   useEffect(() => {
+    alert(currentPatient?.id)
     if (currentPatient?.id) {
       loadElastics(currentPatient.id);
     }

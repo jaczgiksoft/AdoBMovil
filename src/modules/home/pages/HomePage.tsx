@@ -35,23 +35,22 @@ export const HomePage: React.FC = () => {
   };
 
   useIonViewWillEnter(() => {
-    const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+    const idToLoad = currentPatient?.id || (availableProfiles?.length === 1 ? availableProfiles[0].id : null);
     if (idToLoad) {
       loadSummary(idToLoad);
     }
   });
 
   useEffect(() => {
-    // Intentamos cargar usando el paciente seleccionado o el ID del usuario (si es paciente)
-    const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+    const idToLoad = currentPatient?.id || (availableProfiles?.length === 1 ? availableProfiles[0].id : null);
 
     if (idToLoad) {
       loadSummary(idToLoad);
-    } else {
-      // Si no hay paciente ni ID de usuario válido, dejamos de cargar
+    } else if (!isLoading && !currentPatient) {
+      // If still loading state but no ID, we might need to wait for hydration or redirect
       setIsLoading(false);
     }
-  }, [currentPatient?.id, token]);
+  }, [currentPatient?.id, availableProfiles, token]);
 
   /* 
   if (user?.role === 'tutor' && !currentPatient) {
@@ -89,12 +88,12 @@ export const HomePage: React.FC = () => {
                   className={`text-2xl font-semibold text-[var(--text-primary)] mb-1 tracking-tight flex items-center gap-2 ${canSwitchPatient ? 'cursor-pointer active:opacity-70' : ''}`}
                   onClick={() => canSwitchPatient && router.push('/select-patient', 'forward')}
                 >
-                  Hi, {summary.patientFirstName || 'Patient'}!
+                  Hola, {summary.patientFirstName || 'Patient'}!
                   {canSwitchPatient && (
                     <IonIcon icon={chevronDownOutline} className="text-xl text-[var(--text-secondary)] opacity-60" />
                   )}
                 </h1>
-                <p className="text-[var(--text-secondary)] font-medium text-[0.85rem] opacity-90 tracking-wide">Ready for your best smile?</p>
+                <p className="text-[var(--text-secondary)] font-medium text-[0.85rem] opacity-90 tracking-wide">¿Listo para lucir tu mejor sonrisa?</p>
               </div>
               <div
                 className="w-14 h-14 rounded-full bg-[var(--bg-surface-solid)] shadow-sm p-[2px] border border-[var(--border-subtle)] overflow-hidden flex-shrink-0 cursor-pointer"

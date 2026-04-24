@@ -44,7 +44,7 @@ export const AppointmentsPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<{ message: string, color: string } | null>(null);
 
   const { currentPatient } = usePatient();
-  const { user, token } = useAuthStore();
+  const { user, token, availableProfiles } = useAuthStore();
 
   const loadAppointments = (idToLoad: string) => {
     setIsLoading(true);
@@ -76,22 +76,21 @@ export const AppointmentsPage: React.FC = () => {
   };
 
   useIonViewWillEnter(() => {
-    const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+    const idToLoad = currentPatient?.id || (availableProfiles?.length === 1 ? availableProfiles[0].id : null);
     if (idToLoad) {
       loadAppointments(idToLoad);
     }
   });
 
   useEffect(() => {
-    // Intentamos cargar usando el paciente seleccionado o el ID del usuario (si es paciente)
-    const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+    const idToLoad = currentPatient?.id || (availableProfiles?.length === 1 ? availableProfiles[0].id : null);
 
     if (idToLoad) {
       loadAppointments(idToLoad);
     } else {
       setIsLoading(false);
     }
-  }, [currentPatient?.id, token, user?.id, user?.role]);
+  }, [currentPatient?.id, availableProfiles, token]);
 
   const handleUpdateStatus = async (status: 'confirmada' | 'cancelada') => {
     if (!selectedAppointment) return;
@@ -106,7 +105,7 @@ export const AppointmentsPage: React.FC = () => {
       setShowModal(false);
       
       // Refresh list
-      const idToLoad = currentPatient?.id || (user?.role === 'patient' ? user.id : null);
+      const idToLoad = currentPatient?.id || (availableProfiles?.length === 1 ? availableProfiles[0].id : null);
       if (idToLoad) loadAppointments(idToLoad);
     } catch (err: any) {
       console.error('Error updating appointment:', err);
