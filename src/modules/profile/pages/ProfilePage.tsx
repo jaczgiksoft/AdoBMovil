@@ -12,7 +12,8 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { usePatient } from '../../../core/context/PatientContext';
 import {
   mailOutline, callOutline, calendarOutline, logOutOutline, moonOutline,
-  personOutline, maleFemaleOutline, locationOutline, add, pencil, trashOutline
+  personOutline, maleFemaleOutline, locationOutline, add, pencil, trashOutline,
+  peopleOutline
 } from 'ionicons/icons';
 
 export const ProfilePage: React.FC = () => {
@@ -32,7 +33,7 @@ export const ProfilePage: React.FC = () => {
   const [hobbyToDelete, setHobbyToDelete] = useState<number | null>(null);
 
   const { isDarkMode, toggleTheme } = useThemeStore();
-  const { token } = useAuthStore();
+  const { token, availableProfiles } = useAuthStore();
   const router = useIonRouter();
 
   const handleLogout = () => {
@@ -40,7 +41,7 @@ export const ProfilePage: React.FC = () => {
     router.push('/login', 'root', 'replace');
   };
 
-  const loadProfile = (retryCount = 0) => {
+  const loadProfile = (patientId?: string) => {
     if (!token) {
       setLoading(false);
       setError('No authentication token found.');
@@ -50,11 +51,11 @@ export const ProfilePage: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    profileService.getMyProfile(token)
+    profileService.getMyProfile(token, patientId)
       .then((data) => {
         setProfile(data);
         // Ensure hobbies are in object format
-        const mappedHobbies = (data.hobbies || []).map(h => 
+        const mappedHobbies = (data.hobbies || []).map(h =>
           typeof h === 'string' ? { id: Math.random(), name: h } : h
         );
         setHobbies(mappedHobbies as { id: number; name: string }[]);
@@ -68,12 +69,12 @@ export const ProfilePage: React.FC = () => {
   };
 
   useIonViewWillEnter(() => {
-    loadProfile();
+    loadProfile(currentPatient?.id);
   });
 
   useEffect(() => {
-    loadProfile();
-  }, [token]);
+    loadProfile(currentPatient?.id);
+  }, [token, currentPatient?.id]);
 
   // Hobbies CRUD
   const openAddModal = () => {
@@ -94,15 +95,12 @@ export const ProfilePage: React.FC = () => {
     try {
       setIsSaving(true);
       if (editingIndex !== null) {
-        // For simplicity in this demo, we'll just delete and re-add or handle locally if update not in API
-        // But since I didn't implement 'update' in backend, I'll just handle it as a new one or local for now
-        // Let's assume we only add/delete for now as per plan
-        // If editing, we could delete old and add new, but let's just update local if update API is missing
+        // Local update for simplicity if API doesn't support edit
         const updated = [...hobbies];
         updated[editingIndex].name = currentHobby.trim();
         setHobbies(updated);
       } else {
-        const newHobby = await profileService.addHobby(currentHobby.trim(), token);
+        const newHobby = await profileService.addHobby(currentHobby.trim(), token, currentPatient?.id);
         setHobbies([...hobbies, newHobby]);
       }
       setShowModal(false);
@@ -117,7 +115,7 @@ export const ProfilePage: React.FC = () => {
     if (hobbyToDelete !== null && token) {
       try {
         const hobbyId = hobbies[hobbyToDelete].id;
-        await profileService.deleteHobby(hobbyId, token);
+        await profileService.deleteHobby(hobbyId, token, currentPatient?.id);
         const updated = hobbies.filter((_, i) => i !== hobbyToDelete);
         setHobbies(updated);
         setHobbyToDelete(null);
@@ -149,8 +147,8 @@ export const ProfilePage: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Oops! Something went wrong</h3>
             <p className="text-[var(--text-secondary)] text-sm mb-8 opacity-80">{error}</p>
-            <IonButton 
-              onClick={() => loadProfile()} 
+            <IonButton
+              onClick={() => loadProfile()}
               className="brand-gradient font-semibold h-12 px-8 rounded-xl shadow-md"
             >
               Retry
@@ -269,7 +267,20 @@ export const ProfilePage: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-6 pb-10">
+            <div className="pt-6 pb-10 space-y-3">
+              {availableProfiles && availableProfiles.length > 1 && (
+                <IonButton 
+                  fill="outline" 
+                  color="primary" 
+                  expand="block" 
+                  onClick={() => router.push('/select-patient', 'forward', 'push')} 
+                  className="font-semibold h-12 text-sm tracking-widest uppercase border-2"
+                >
+                  <IonIcon slot="start" icon={peopleOutline} />
+                  Cambiar Paciente
+                </IonButton>
+              )}
+
               <IonButton fill="clear" color="danger" expand="block" onClick={handleLogout} className="font-semibold h-12 text-sm tracking-widest uppercase">
                 <IonIcon slot="start" icon={logOutOutline} />
                 Sign Out

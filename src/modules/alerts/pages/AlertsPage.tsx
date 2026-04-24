@@ -4,6 +4,7 @@ import { getAlertsApi } from '../services/alerts.api';
 import { AlertItem } from '../types';
 import { notificationsOutline, warningOutline, informationCircleOutline } from 'ionicons/icons';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { usePatient } from '../../../core/context/PatientContext';
 
 const getSeverityIcon = (severity: string) => {
   if (severity === 'urgent') return warningOutline;
@@ -19,13 +20,14 @@ const getSeverityColor = (severity: string) => {
 
 export const AlertsPage: React.FC = () => {
   const { token } = useAuthStore();
+  const { currentPatient } = usePatient();
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadAlerts = async () => {
+  const loadAlerts = async (patientId: string) => {
     try {
       setLoading(true);
-      const data = await getAlertsApi(token || undefined);
+      const data = await getAlertsApi(patientId, token || undefined);
       setAlerts(data);
       setLoading(false);
     } catch (err) {
@@ -35,12 +37,16 @@ export const AlertsPage: React.FC = () => {
   };
 
   useIonViewWillEnter(() => {
-    loadAlerts();
+    if (currentPatient?.id) {
+      loadAlerts(currentPatient.id);
+    }
   });
 
   useEffect(() => {
-    loadAlerts();
-  }, [token]);
+    if (currentPatient?.id) {
+      loadAlerts(currentPatient.id);
+    }
+  }, [currentPatient?.id, token]);
 
   return (
     <IonPage>

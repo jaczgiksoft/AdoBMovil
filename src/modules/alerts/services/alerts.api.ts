@@ -1,8 +1,8 @@
 import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
 import { AlertItem } from '../types';
 
-export const getAlertsApi = async (token?: string): Promise<AlertItem[]> => {
-  const response = await fetch(`${API_URL}/patient-alerts/my-alerts`, {
+export const getAlertsApi = async (patientId: string, token?: string): Promise<AlertItem[]> => {
+  const response = await fetch(`${API_URL}/patient-alerts/patient-mobile/${patientId}`, {
     method: 'GET',
     headers: getBaseHeaders(token),
   });

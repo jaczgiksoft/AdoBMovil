@@ -5,12 +5,12 @@ import { Route, Redirect } from 'react-router-dom';
 
 import LoginPage from '../modules/auth/pages/LoginPage';
 import FirstAccessPage from '../modules/auth/pages/FirstAccessPage';
+import SelectPatientPage from '../modules/auth/pages/SelectPatientPage';
 import TabsLayout from '../components/layout/TabsLayout';
 import { AuthGuard } from './AuthGuard';
 import { useAuthStore } from '../store/useAuthStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { usePatient } from '../core/context/PatientContext';
-import { demoSelfRelationships, demoPatientsData } from '../core/demo/demo-data';
 
 setupIonicReact();
 
@@ -23,30 +23,8 @@ export const AppRouter: React.FC = () => {
     useThemeStore.getState();
   }, []);
 
-  // 🔹 Manejo de paciente activo según rol
-  useEffect(() => {
-    if (!user) {
-      setCurrentPatient(null);
-      return;
-    }
-
-    if (user.role === 'patient') {
-      const patientId = demoSelfRelationships[user.id];
-      const profile = demoPatientsData[patientId];
-
-      if (profile) {
-        setCurrentPatient({
-          id: profile.id!,
-          fullName: profile.fullName ?? '',
-          age: profile.age ?? 0,
-        });
-      } else {
-        setCurrentPatient(null);
-      }
-    } else {
-      setCurrentPatient(null);
-    }
-  }, [user, setCurrentPatient]);
+  // Removed old demo-based patient selection. PatientContext now handles persistence
+  // and selection via SelectPatientPage.
 
   return (
     <IonApp>
@@ -60,11 +38,30 @@ export const AppRouter: React.FC = () => {
             render={() => {
               if (!isAuthenticated) return <LoginPage />;
 
+              // Redirigir a selección de perfil si es necesario
+              const profiles = useAuthStore.getState().availableProfiles;
+              if (profiles && profiles.length > 1) {
+                return <Redirect to="/select-patient" />;
+              }
+              if (profiles && profiles.length === 1 && profiles[0].type === 'represented') {
+                return <Redirect to="/select-patient" />;
+              }
+
               return (
                 <Redirect
                   to={user?.role === 'tutor' ? '/app/overview' : '/app/home'}
                 />
               );
+            }}
+          />
+
+          {/* SELECT PATIENT */}
+          <Route
+            exact
+            path="/select-patient"
+            render={() => {
+              if (!isAuthenticated) return <Redirect to="/login" />;
+              return <SelectPatientPage />;
             }}
           />
 
@@ -103,6 +100,14 @@ export const AppRouter: React.FC = () => {
             path="/"
             render={() => {
               if (!isAuthenticated) return <Redirect to="/login" />;
+
+              const profiles = useAuthStore.getState().availableProfiles;
+              if (profiles && profiles.length > 1) {
+                return <Redirect to="/select-patient" />;
+              }
+              if (profiles && profiles.length === 1 && profiles[0].type === 'represented') {
+                return <Redirect to="/select-patient" />;
+              }
 
               return (
                 <Redirect

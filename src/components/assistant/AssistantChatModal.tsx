@@ -89,7 +89,7 @@ export const AssistantChatModal: React.FC<AssistantChatModalProps> = ({ isOpen, 
       }
 
       const result = await response.json();
-      
+
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         text: result?.data?.content || 'Lo siento, no pude procesar tu solicitud.',
@@ -109,7 +109,7 @@ export const AssistantChatModal: React.FC<AssistantChatModalProps> = ({ isOpen, 
       setIsTyping(false);
     }
   };
-  
+
   const getMascotSrc = () => '/assets/mascot.png';
 
   const avatarFallback = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
@@ -133,8 +133,8 @@ export const AssistantChatModal: React.FC<AssistantChatModalProps> = ({ isOpen, 
             </div>
           </IonButtons>
           <div className="flex flex-col justify-center">
-            <IonTitle className="p-0 text-lg font-semibold tracking-tight text-[var(--text-primary)]">Assistant</IonTitle>
-            <span className="text-xs font-medium text-[var(--text-secondary)] opacity-90">How can I help you?</span>
+            <IonTitle className="p-0 text-lg font-semibold tracking-tight text-[var(--text-primary)]">Asistente</IonTitle>
+            <span className="text-xs font-medium text-[var(--text-secondary)] opacity-90">¿En qué puedo ayudarte?</span>
           </div>
           <IonButtons slot="end" className="mr-1">
             <IonButton onClick={onClose} className="text-[var(--text-secondary)]">

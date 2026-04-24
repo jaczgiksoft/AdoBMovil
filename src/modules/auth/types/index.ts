@@ -10,8 +10,16 @@ export interface PatientUser {
   isFirstAccess?: boolean;
 }
 
+export interface PatientProfile {
+  id: string;
+  name: string;
+  photo: string | null;
+  type: 'self' | 'represented';
+}
+
 export interface AuthResponse {
   user: PatientUser;
   token: string;
   activePatientId?: string;
+  profiles?: PatientProfile[];
 }

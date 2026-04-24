@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PatientUser } from '../modules/auth/types';
+import { PatientUser, PatientProfile } from '../modules/auth/types';
 
 interface AuthState {
   user: PatientUser | null;
   token: string | null;
   isAuthenticated: boolean;
   isHydrated: boolean;
+  availableProfiles: PatientProfile[];
 
-  login: (user: PatientUser, token: string) => void;
+  login: (user: PatientUser, token: string, profiles?: PatientProfile[]) => void;
   logout: () => void;
   completeFirstAccess: () => void;
 
@@ -22,12 +23,14 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isHydrated: false,
+      availableProfiles: [],
 
-      login: (user, token) =>
+      login: (user, token, profiles = []) =>
         set({
           user,
           token,
           isAuthenticated: true,
+          availableProfiles: profiles,
         }),
 
       logout: () =>
@@ -35,6 +38,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           token: null,
           isAuthenticated: false,
+          availableProfiles: [],
         }),
 
       completeFirstAccess: () =>

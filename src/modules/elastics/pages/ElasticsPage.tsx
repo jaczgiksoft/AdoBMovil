@@ -5,6 +5,7 @@ import { ElasticInstruction, PatientElastic } from '../types';
 import { timeOutline, calendarOutline, checkmarkCircleOutline, ellipsisHorizontalCircleOutline, playCircleOutline, alertCircleOutline } from 'ionicons/icons';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { usePatient } from '../../../core/context/PatientContext';
+import { API_URL, BASE_URL } from '../../../core/config/api.config';
 
 const getStatusBadge = (status: string) => {
   if (status === 'active') {
@@ -16,8 +17,6 @@ const getStatusBadge = (status: string) => {
   return { color: 'text-brand-primary bg-brand-primary/10 border-brand-primary/20', label: 'Upcoming', icon: ellipsisHorizontalCircleOutline };
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const BASE_URL = import.meta.env.VITE_API || 'http://localhost:3000';
 
 // 🗺️ Mapper: Backend -> UI
 const mapBackendToUI = (data: PatientElastic[]): ElasticInstruction[] => {
@@ -78,11 +77,11 @@ export const ElasticsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const loadElastics = async () => {
+  const loadElastics = async (patientId: string) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await elasticsService.getElastics();
+      const data = await elasticsService.getElastics(patientId);
       setInstructions(mapBackendToUI(data as PatientElastic[]));
     } catch (err: any) {
       console.error('Error loading elastics:', err);
@@ -93,8 +92,16 @@ export const ElasticsPage: React.FC = () => {
   };
 
   useIonViewWillEnter(() => {
-    loadElastics();
+    if (currentPatient?.id) {
+      loadElastics(currentPatient.id);
+    }
   });
+
+  useEffect(() => {
+    if (currentPatient?.id) {
+      loadElastics(currentPatient.id);
+    }
+  }, [currentPatient?.id]);
 
   const handleImageClick = async (imagePath: string) => {
     setSelectedImage(imagePath);

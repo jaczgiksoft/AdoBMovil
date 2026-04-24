@@ -12,10 +12,11 @@ import { usePatient } from '@/core/context/PatientContext';
 export const HomePage: React.FC = () => {
   const [summary, setSummary] = useState<PatientHomeSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showSelector, setShowSelector] = useState(false);
-  const { user, token } = useAuthStore();
+  const { availableProfiles, user, token } = useAuthStore();
   const { currentPatient } = usePatient();
   const router = useIonRouter();
+
+  const canSwitchPatient = availableProfiles && availableProfiles.length > 1;
 
   const loadSummary = (idToLoad: string) => {
     setIsLoading(true);
@@ -85,11 +86,11 @@ export const HomePage: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h1
-                  className={`text-2xl font-semibold text-[var(--text-primary)] mb-1 tracking-tight flex items-center gap-2 ${user?.role === 'tutor' ? 'cursor-pointer active:opacity-70' : ''}`}
-                  onClick={() => user?.role === 'tutor' && setShowSelector(true)}
+                  className={`text-2xl font-semibold text-[var(--text-primary)] mb-1 tracking-tight flex items-center gap-2 ${canSwitchPatient ? 'cursor-pointer active:opacity-70' : ''}`}
+                  onClick={() => canSwitchPatient && router.push('/select-patient', 'forward')}
                 >
                   Hi, {summary.patientFirstName || 'Patient'}!
-                  {user?.role === 'tutor' && (
+                  {canSwitchPatient && (
                     <IonIcon icon={chevronDownOutline} className="text-xl text-[var(--text-secondary)] opacity-60" />
                   )}
                 </h1>
@@ -186,10 +187,6 @@ export const HomePage: React.FC = () => {
           </div>
         )}
 
-        <PatientSelectorModal
-          isOpen={showSelector}
-          onDidDismiss={() => setShowSelector(false)}
-        />
       </IonContent>
     </IonPage >
   );

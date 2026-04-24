@@ -1,8 +1,9 @@
 import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
 import { PatientProfile } from '../types';
 
-export const getMyProfileApi = async (token: string): Promise<PatientProfile> => {
-  const response = await fetch(`${API_URL}/auth/me-patient`, {
+export const getMyProfileApi = async (token: string, patientId?: string): Promise<PatientProfile> => {
+  const url = patientId ? `${API_URL}/auth/me-patient?patientId=${patientId}` : `${API_URL}/auth/me-patient`;
+  const response = await fetch(url, {
     method: 'GET',
     headers: getBaseHeaders(token),
   });
@@ -16,11 +17,11 @@ export const getMyProfileApi = async (token: string): Promise<PatientProfile> =>
   return result.data;
 };
 
-export const addHobbyApi = async (name: string, token: string): Promise<{ id: number; name: string }> => {
+export const addHobbyApi = async (name: string, token: string, patientId?: string): Promise<{ id: number; name: string }> => {
   const response = await fetch(`${API_URL}/auth/me-patient/hobbies`, {
     method: 'POST',
     headers: getBaseHeaders(token),
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, patientId }),
   });
 
   if (!response.ok) {
@@ -32,8 +33,9 @@ export const addHobbyApi = async (name: string, token: string): Promise<{ id: nu
   return result.data;
 };
 
-export const deleteHobbyApi = async (id: number, token: string): Promise<void> => {
-  const response = await fetch(`${API_URL}/auth/me-patient/hobbies/${id}`, {
+export const deleteHobbyApi = async (id: number, token: string, patientId?: string): Promise<void> => {
+  const url = patientId ? `${API_URL}/auth/me-patient/hobbies/${id}?patientId=${patientId}` : `${API_URL}/auth/me-patient/hobbies/${id}`;
+  const response = await fetch(url, {
     method: 'DELETE',
     headers: getBaseHeaders(token),
   });

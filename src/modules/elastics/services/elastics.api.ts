@@ -1,12 +1,12 @@
 import { API_URL, getBaseHeaders } from '../../../core/config/api.config';
 import { PatientElastic } from '../types';
 
-export const getMyElasticsApi = async (token: string): Promise<PatientElastic[]> => {
+export const getMyElasticsApi = async (patientId: string, token: string): Promise<PatientElastic[]> => {
   if (!token) {
     throw new Error('Authentication token is required');
   }
 
-  const response = await fetch(`${API_URL}/auth/me-patient/elastics`, {
+  const response = await fetch(`${API_URL}/patient-elastics/patient/${patientId}`, {
     method: 'GET',
     headers: getBaseHeaders(token),
   });

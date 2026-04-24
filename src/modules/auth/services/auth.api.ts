@@ -48,5 +48,6 @@ export const loginApi = async (username?: string, password?: string): Promise<Au
     user,
     token: data.token,
     activePatientId: String(decodedToken.id),
+    profiles: data.profiles || [],
   };
 };

@@ -29,7 +29,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await authService.login(username, password);
-      login(response.user, response.token);
+      login(response.user, response.token, response.profiles);
       // Routing is handled by AppRouter / AuthGuard based on auth state
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
